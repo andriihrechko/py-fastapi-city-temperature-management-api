@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database.base import Base
+from app.models.city import CityModel  # noqa
 
 config = context.config
 
