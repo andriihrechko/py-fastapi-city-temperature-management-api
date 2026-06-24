@@ -1,0 +1,14 @@
+import uvicorn
+from fastapi import FastAPI
+
+from app.routers import city
+
+app = FastAPI(
+    title="Cities API",
+    version="0.1.0",
+    description="API for managing cities",
+    prefix="/api",
+)
+
+
+app.include_router(city.router)
