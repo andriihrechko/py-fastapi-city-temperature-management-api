@@ -10,6 +10,11 @@ class CityCreateSchema(CityBaseSchema):
     pass
 
 
+class CityUpdateSchema(BaseModel):
+    name: str | None = None
+    additional_info: str | None = None
+
+
 class CitySchema(CityBaseSchema):
     id: int
 
