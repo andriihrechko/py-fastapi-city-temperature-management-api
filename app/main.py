@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.routers import city
+from app.routers import city, temperature
 
 app = FastAPI(
     title="Cities API",
@@ -12,3 +12,4 @@ app = FastAPI(
 
 
 app.include_router(city.router)
+app.include_router(temperature.router)
