@@ -1,50 +1,58 @@
 from sqlalchemy import select
 
 from app.models.city import CityModel
-from app.database.config import DatabaseSession
+from app.database.config import AsyncDatabaseSession
 from app.schemas.city import CityCreateSchema, CityUpdateSchema
 
 
-def retrieve_city(db: DatabaseSession, city_id: int) -> CityModel | None:
+async def retrieve_city(
+    db: AsyncDatabaseSession, city_id: int
+) -> CityModel | None:
     stmt = select(CityModel).where(CityModel.id == city_id)
-    return db.scalars(stmt).first()
+    result = await db.scalars(stmt)
+    return result.first()
 
 
-def retrieve_city_by_name(
-    db: DatabaseSession, city_name: str
+async def retrieve_city_by_name(
+    db: AsyncDatabaseSession, city_name: str
 ) -> CityModel | None:
     stmt = select(CityModel).where(CityModel.name == city_name)
-    return db.scalars(stmt).first()
+    result = await db.scalars(stmt)
+    return result.first()
 
 
-def list_cities(db: DatabaseSession) -> list[CityModel]:
+async def list_cities(db: AsyncDatabaseSession) -> list[CityModel]:
     stmt = select(CityModel)
-    return db.scalars(stmt).all()
+    result = await db.scalars(stmt)
+    return result.all()
 
 
-def create_city(db: DatabaseSession, city: CityCreateSchema) -> CityModel:
-    city = CityModel(**city.model_dump())
-    db.add(city)
-    db.commit()
-    db.refresh(city)
-    return city
-
-
-def update_city(
-    db: DatabaseSession, city_id: int, city: CityUpdateSchema
+async def create_city(
+    db: AsyncDatabaseSession, city: CityCreateSchema
 ) -> CityModel:
-    db_city = db.get(CityModel, city_id)
+    new_city = CityModel(**city.model_dump())
+    db.add(new_city)
+    await db.commit()
+    await db.refresh(new_city)
+    return new_city
+
+
+async def update_city(
+    db: AsyncDatabaseSession, city_id: int, city: CityUpdateSchema
+) -> CityModel:
+    db_city = await retrieve_city(db=db, city_id=city_id)
     update_data = city.model_dump(exclude_unset=True)
 
     for key, value in update_data.items():
         setattr(db_city, key, value)
 
-    db.commit()
-    db.refresh(db_city)
+    await db.commit()
+    await db.refresh(db_city)
     return db_city
 
 
-def delete_city(db: DatabaseSession, city_id: int) -> None:
-    city = retrieve_city(db=db, city_id=city_id)
-    db.delete(city)
-    db.commit()
+async def delete_city(db: AsyncDatabaseSession, city_id: int) -> None:
+    city = await retrieve_city(db=db, city_id=city_id)
+    if city:
+        await db.delete(city)
+        await db.commit()

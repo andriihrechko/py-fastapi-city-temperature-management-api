@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import select
 
-from app.database.config import DatabaseSession
+from app.database.config import AsyncDatabaseSession
 from app.models.temperature import TemperatureModel
 from app.services.city import list_cities
 
@@ -24,8 +24,8 @@ async def fetch_temperature(
     return None
 
 
-async def update_all_temperatures(db: DatabaseSession):
-    cities = list_cities(db=db)
+async def update_all_temperatures(db: AsyncDatabaseSession):
+    cities = await list_cities(db=db)
     async with httpx.AsyncClient() as client:
         tasks = [
             fetch_temperature(client=client, city_name=city.name)
@@ -42,13 +42,15 @@ async def update_all_temperatures(db: DatabaseSession):
                 )
                 db.add(db_temperature)
     await db.commit()
-    return len(temperatures)
+    return len([t for t in temperatures if t is not None])
 
 
-def list_temperatures(
-    db: DatabaseSession, city_id: int = None
+async def list_temperatures(
+    db: AsyncDatabaseSession, city_id: int = None
 ) -> list[TemperatureModel]:
     stmt = select(TemperatureModel)
     if city_id is not None:
         stmt = stmt.where(TemperatureModel.city_id == city_id)
-    return db.scalars(stmt).all()
+
+    results = await db.scalars(stmt)
+    return results.all()

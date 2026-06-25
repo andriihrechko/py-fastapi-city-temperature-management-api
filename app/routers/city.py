@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
+from starlette import status
 
-from app.database.config import DatabaseSession
+from app.database.config import AsyncDatabaseSession
 from app.schemas.city import CitySchema, CityCreateSchema, CityUpdateSchema
 from app.services.city import (
     retrieve_city,
@@ -21,8 +22,8 @@ router = APIRouter(
     "/{city_id}/",
     response_model=CitySchema,
 )
-def get_city_api(db: DatabaseSession, city_id: int):
-    city = retrieve_city(db=db, city_id=city_id)
+async def get_city_api(db: AsyncDatabaseSession, city_id: int):
+    city = await retrieve_city(db=db, city_id=city_id)
     if city is None:
         raise HTTPException(status_code=404, detail="City not found.")
     return city
@@ -32,34 +33,38 @@ def get_city_api(db: DatabaseSession, city_id: int):
     "/",
     response_model=list[CitySchema],
 )
-def get_cities_api(db: DatabaseSession):
-    return list_cities(db=db)
+async def get_cities_api(db: AsyncDatabaseSession):
+    cities = await list_cities(db=db)
+    return cities
 
 
 @router.post("/", response_model=CitySchema)
-def create_city_api(db: DatabaseSession, city: CityCreateSchema):
-    db_city = retrieve_city_by_name(db=db, city_name=city.name)
+async def create_city_api(db: AsyncDatabaseSession, city: CityCreateSchema):
+    db_city = await retrieve_city_by_name(db=db, city_name=city.name)
     if db_city:
         raise HTTPException(status_code=400, detail="City already exists.")
-    return create_city(db=db, city=city)
+    db_city = await create_city(db=db, city=city)
+    return db_city
 
 
 @router.patch("/{city_id}/", response_model=CitySchema)
-def update_city_api(db: DatabaseSession, city_id: int, city: CityUpdateSchema):
+async def update_city_api(
+    db: AsyncDatabaseSession, city_id: int, city: CityUpdateSchema
+):
     if city.name:
-        db_city = retrieve_city_by_name(db=db, city_name=city.name)
+        db_city = await retrieve_city_by_name(db=db, city_name=city.name)
         if db_city and db_city.id != city_id:
             raise HTTPException(status_code=400, detail="City already exists.")
-    db_city = retrieve_city(db=db, city_id=city_id)
+    db_city = await retrieve_city(db=db, city_id=city_id)
     if db_city is None:
         raise HTTPException(status_code=404, detail="City not found.")
-    return update_city(db=db, city_id=city_id, city=city)
+    db_city = await update_city(db=db, city_id=city_id, city=city)
+    return db_city
 
 
-@router.delete("/{city_id}/")
-def delete_city_api(db: DatabaseSession, city_id: int):
-    city = retrieve_city(db=db, city_id=city_id)
+@router.delete("/{city_id}/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_city_api(db: AsyncDatabaseSession, city_id: int) -> None:
+    city = await retrieve_city(db=db, city_id=city_id)
     if city is None:
         raise HTTPException(status_code=404, detail="City not found.")
-    delete_city(db=db, city_id=city_id)
-    return {"message": "City deleted successfully."}
+    await delete_city(db=db, city_id=city_id)
