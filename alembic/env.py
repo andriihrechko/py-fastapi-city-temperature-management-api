@@ -7,6 +7,7 @@ from alembic import context
 
 from app.database.base import Base
 from app.models.city import CityModel  # noqa
+from app.models.temperature import TemperatureModel  # noqa
 
 config = context.config
 
