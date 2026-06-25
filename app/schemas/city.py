@@ -3,16 +3,15 @@ from pydantic import BaseModel, ConfigDict
 
 class CityBaseSchema(BaseModel):
     name: str
-    additional_info: str
+    additional_info: str | None = None
 
 
 class CityCreateSchema(CityBaseSchema):
     pass
 
 
-class CityUpdateSchema(BaseModel):
+class CityUpdateSchema(CityBaseSchema):
     name: str | None = None
-    additional_info: str | None = None
 
 
 class CitySchema(CityBaseSchema):

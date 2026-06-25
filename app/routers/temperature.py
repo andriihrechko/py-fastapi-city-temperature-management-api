@@ -5,7 +5,7 @@ from app.schemas.temperature import TemperatureSchema
 from app.services.temperature import update_all_temperatures, list_temperatures
 
 router = APIRouter(
-    prefix="/temperatures",
+    prefix="/api/temperatures",
     tags=["Temperatures API"],
 )
 

@@ -12,7 +12,7 @@ from app.services.city import (
 )
 
 router = APIRouter(
-    prefix="/cities",
+    prefix="/api/cities",
     tags=["Cities API"],
 )
 
@@ -46,9 +46,10 @@ def create_city_api(db: DatabaseSession, city: CityCreateSchema):
 
 @router.patch("/{city_id}/", response_model=CitySchema)
 def update_city_api(db: DatabaseSession, city_id: int, city: CityUpdateSchema):
-    db_city = retrieve_city_by_name(db=db, city_name=city.name)
-    if db_city and db_city.id != city_id:
-        raise HTTPException(status_code=400, detail="City already exists.")
+    if city.name:
+        db_city = retrieve_city_by_name(db=db, city_name=city.name)
+        if db_city and db_city.id != city_id:
+            raise HTTPException(status_code=400, detail="City already exists.")
     db_city = retrieve_city(db=db, city_id=city_id)
     if db_city is None:
         raise HTTPException(status_code=404, detail="City not found.")

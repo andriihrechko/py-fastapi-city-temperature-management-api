@@ -41,12 +41,14 @@ async def update_all_temperatures(db: DatabaseSession):
                     temperature=temperature,
                 )
                 db.add(db_temperature)
-    db.commit()
+    await db.commit()
     return len(temperatures)
 
 
-def list_temperatures(db: DatabaseSession, city_id: int = None) -> list[TemperatureModel]:
+def list_temperatures(
+    db: DatabaseSession, city_id: int = None
+) -> list[TemperatureModel]:
     stmt = select(TemperatureModel)
-    if city_id:
+    if city_id is not None:
         stmt = stmt.where(TemperatureModel.city_id == city_id)
     return db.scalars(stmt).all()
